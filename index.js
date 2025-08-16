@@ -452,10 +452,30 @@ app.post('/sql', async (req, res, next) => {
 // if port is not set then use 3000
 const port = process.env.PORT || 3000;
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server started on port ${port}`);
-  console.log(`Health check available at http://0.0.0.0:${port}/`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Auth key configured: ${process.env.AUTH_KEY ? 'Yes' : 'No'}`);
-  console.log(`Account configured: ${process.env.ACCOUNT ? 'Yes' : 'No'}`);
+// Add process error handling
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+console.log('Starting server...');
+console.log(`Node.js version: ${process.version}`);
+console.log(`Environment: ${process.env.NODE_ENV}`);
+
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`✅ Server started successfully on port ${port}`);
+  console.log(`✅ Health check available at http://0.0.0.0:${port}/`);
+  console.log(`✅ Auth key configured: ${process.env.AUTH_KEY ? 'Yes' : 'No'}`);
+  console.log(`✅ Account configured: ${process.env.ACCOUNT ? 'Yes' : 'No'}`);
+  console.log(`✅ Server is ready to accept connections`);
+});
+
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
+  process.exit(1);
 });
