@@ -28,7 +28,11 @@ const whitelist = [
   'https://www.skatehive.app', 
   'https://www.stoken.quest',
   'http://localhost:3000',
-  'http://localhost:3002'  // Your Next.js frontend
+  'http://localhost:3002',  // Your Next.js frontend
+  // Add your production domains when ready
+  // 'https://your-frontend.vercel.app',
+  // 'https://your-app.netlify.app',
+  // 'https://your-custom-domain.com'
 ];
 
 // allow cors for only the whitelist or if the environment is development
