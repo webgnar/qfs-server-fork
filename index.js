@@ -1,4 +1,15 @@
 require("dotenv").config();
+
+// Check required environment variables
+const requiredEnvVars = ['AUTH_KEY', 'POSTING_KEY', 'ACCOUNT'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.warn('Warning: Missing environment variables:', missingVars);
+  console.warn('Server will start but some features may not work properly');
+} else {
+  console.log('All required environment variables are present');
+}
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
@@ -14,10 +25,17 @@ const getQuery = require('./hivesql/main');
 
 const config = require('./firebase.json');
 
-// Initialize Firebase
-const fb = initializeApp(config);
-
-const db = getDatabase(fb);
+// Initialize Firebase with error handling
+let db;
+try {
+  console.log('Initializing Firebase...');
+  const fb = initializeApp(config);
+  db = getDatabase(fb);
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Don't crash the server, just log the error
+}
 
 const client = new dhive.Client(['https://api.hive.blog', 'https://api.hivekings.com', 'https://anyx.io', 'https://api.openhive.network']);
 
@@ -66,11 +84,27 @@ app.use(logger('dev'));
 
 // Simple health check endpoint
 app.get('/', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    message: 'QFS Server is running',
-    timestamp: new Date().toISOString()
-  });
+  try {
+    res.status(200).json({ 
+      status: 'OK', 
+      message: 'QFS Server is running',
+      timestamp: new Date().toISOString(),
+      port: process.env.PORT || 3000,
+      env: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'ERROR',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Add a basic health endpoint as well
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy' });
 });
 
 // /token/:username get request that returns a encoded jwt token with username, expires in 7 days
@@ -418,6 +452,10 @@ app.post('/sql', async (req, res, next) => {
 // if port is not set then use 3000
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server started on port ${port}`);
+  console.log(`Health check available at http://0.0.0.0:${port}/`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Auth key configured: ${process.env.AUTH_KEY ? 'Yes' : 'No'}`);
+  console.log(`Account configured: ${process.env.ACCOUNT ? 'Yes' : 'No'}`);
 });
