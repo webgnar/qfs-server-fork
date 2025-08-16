@@ -239,29 +239,43 @@ app.get('/firebase/test', async (req, res) => {
 app.get('/token/:username', async (req, res) => {
   const { username } = req.params;
 
+  console.log(`🔑 Token request for username: ${username}`);
+
   // if the username doesn't exist then return 400
   if (!username) {
+    console.log('❌ No username provided');
     return res.status(400).send('Bad request');
   }
 
-  // encode the token with the AUTH_KEY
-  const token = jwt.sign({ username }, process.env.AUTH_KEY, { expiresIn: '20d' });
+  try {
+    // encode the token with the AUTH_KEY
+    const token = jwt.sign({ username }, process.env.AUTH_KEY, { expiresIn: '20d' });
 
-  // encode the token with the username's public posting key
-  const account = await client.database.getAccounts([username]);
+    console.log(`🔑 Looking up Hive account: ${username}`);
+    // encode the token with the username's public posting key
+    const account = await client.database.getAccounts([username]);
 
-  // if the account doesn't exist then return 404
-  if (account.length === 0) {
-    return res.status(404).send('User not found');
+    console.log(`🔑 Hive API response:`, account.length > 0 ? `Found account` : `No account found`);
+
+    // if the account doesn't exist then return 404
+    if (account.length === 0) {
+      console.log(`❌ User not found: ${username}`);
+      return res.status(404).send('User not found');
+    }
+
+    const publicKey = account[0].posting.key_auths[0][0];
+    console.log(`🔑 Got public key for ${username}`);
+
+    // hive memo encoding
+    const encoded = dhive.Memo.encode(process.env.POSTING_KEY, publicKey, '#' + token);
+
+    console.log(`✅ Token generated successfully for ${username}`);
+    // send the encoded token
+    res.status(200).send(encoded);
+  } catch (error) {
+    console.error(`❌ Token generation error for ${username}:`, error);
+    res.status(500).json({ error: 'Token generation failed', details: error.message });
   }
-
-  const publicKey = account[0].posting.key_auths[0][0];
-
-  // hive memo encoding
-  const encoded = dhive.Memo.encode(process.env.POSTING_KEY, publicKey, '#' + token);
-
-  // send the encoded token
-  res.status(200).send(encoded);
 });
 
 app.get('/token/external/:username', async (req, res) => {
