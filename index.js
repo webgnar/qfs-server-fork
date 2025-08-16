@@ -23,15 +23,34 @@ const fs = require('fs');
 // sql endpoint
 const getQuery = require('./hivesql/main');
 
-const config = require('./firebase.json');
-
 // Initialize Firebase with error handling
 let db;
 try {
   console.log('Initializing Firebase...');
-  const fb = initializeApp(config);
-  db = getDatabase(fb);
-  console.log('Firebase initialized successfully');
+  
+  let app;
+  
+  // Check if we have service account credentials
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    console.log('Using Firebase service account credentials');
+    const admin = require('firebase-admin');
+    
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    
+    app = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: 'https://qfs-server-default-rtdb.firebaseio.com'
+    });
+    
+    db = admin.database();
+    console.log('Firebase Admin SDK initialized successfully');
+  } else {
+    console.log('Using client Firebase configuration');
+    const config = require('./firebase.json');
+    app = initializeApp(config);
+    db = getDatabase(app);
+    console.log('Firebase client SDK initialized successfully');
+  }
 } catch (error) {
   console.error('Firebase initialization error:', error);
   // Don't crash the server, just log the error
@@ -427,14 +446,16 @@ app.get('/leaderboard', async (req, res) => {
 
     // get the data from the database with timeout
     console.log('📊 Fetching from Firebase users table...');
-    const dbRef = ref(db, 'users');
     
     // Add timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Firebase timeout')), 10000)
     );
     
-    const dbSnap = await Promise.race([get(dbRef), timeoutPromise]);
+    const dbSnap = await Promise.race([
+      db.ref('users').once('value'),
+      timeoutPromise
+    ]);
 
     // if the data doesn't exist then return blank
     if (!dbSnap.exists()) {
@@ -465,14 +486,16 @@ app.get('/times', async (req, res) => {
 
     // get the data from the database with timeout
     console.log('⏱️ Fetching from Firebase times table...');
-    const dbRef = ref(db, 'times');
     
     // Add timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Firebase timeout')), 10000)
     );
     
-    const dbSnap = await Promise.race([get(dbRef), timeoutPromise]);
+    const dbSnap = await Promise.race([
+      db.ref('times').once('value'),
+      timeoutPromise
+    ]);
 
     // if the data doesn't exist then return blank
     if (!dbSnap.exists()) {
