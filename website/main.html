@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Quest For Skateboarding</title>
+    <link rel="stylesheet" href="./style.css" />
+    <meta property="og:image" content="https://images.hive.blog/0x0/https://files.peakd.com/file/peakd-hive/stoken.quest/23ynSSkMCqse38wGF27DeByc1e1pdbf4neYcuki1hNbzhcamKYGS5o978Tu25ZrGhAQjT.png">
+    <meta property="og:image:width" content="image-width">
+    <meta property="og:image:height" content="image-height">
+    <meta property="og:description" content="A Skatehive Project">
+    <meta property="og:title" content="Quest For Skateboarding">
+    <meta property="og:type" content="Video Game">
+    <script src="https://cdn.jsdelivr.net/npm/@hiveio/hive-js/dist/hive.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <script src="main.js"></script>
+
+    
+  </head>
+  <body>
+    <h1 class="title">Quest</h1>
+     <div class="titleMiddle">for</div>
+    <h1 class="titleEnd"><span title="Skateboarding is Fun">skateboarding</span></h1>
+    
+
+    <img src="images/coinspin.gif" style="opacity: 0.5;" alt="Spinning stoken coin">
+
+    <h2 class="user_info" id="username"></h2>
+    <h2 class="user_info" id="highscore"></h2>
+    <h2 class="user_info" id="time"></h2>
+    <input type="text" id="username_input" placeholder="Enter your Hive username">
+    <br>
+    <button id="action" data-action="login">Login</button>
+    <audio id ="loginSound">
+      <source src="sounds/chime.mp3" type = "audio/mp3">
+    </audio>
+    <br>
+
+    <div id="game"></div>
+
+    
+   <div id="text-under-game"> <div class="smalltext"> Loading the game for the first time may take a long time.</div>
+
+    <br>
+    <h3>Need a <span class="custom-tooltip"> Hive <span class="tooltip-text">Hive is a blockchain</span></span> account?  </h3>
+    <div class="titleEnd">READ</div>
+    
+    
+    <img src="images/greenarrow.gif" alt="green arrow pointing" style="transform: scaleY(-1);">
+    <p>
+    <ol>
+      <li>
+        Install Hive Keychain browser extension <br>
+        👇<br>
+    
+         <a href="https://hive-keychain.com" target="_blank"><img class="keychainlogo" src="images/hivekeychainsmall.png" alt="hive keychain wallet"></a>
+      </li>
+      <br>
+      <li>
+        Then make Hive account <br>
+        👇<br>
+        <a href="https://hiveonboard.com/create-account?ref=stoken.quest"><img src="images/scroll.gif" alt="8bit script"></a>
+      </li>
+    </ol>
+
+    
+  </div>
+<div class= "smalltext">make sure you save your PRIVATE KEYS <span class="custom-tooltip"> 🧠 <span class="tooltip-text">When Hive gives you your private keys, do NOT lose them.</span></span> </div>
+
+    <br>
+    
+    <img class = "controls" src="images/questforstoken_controls_500mb.gif"
+
+    <br>
+    <h3 id="feed"></h3>
+    
+  
+    
+    <div class="tables">
+      <div class="table_wrapper">
+        <h2><em>High Scores</em></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Username</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard">
+            <td colspan="3">loading...</td>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table_wrapper">
+        <h2><em>Best Times</em></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Username</th>
+              <th>Best Time</th>
+            </tr>
+          </thead>
+          <tbody id="besttimes">
+            <td colspan="3">loading...</td>
+          </tbody>
+        </table>
+      </div>
+      
+            
+  
+    </div>
+
+    <div id="post_wrapper">
+      
+      <div id="post">
+        <div id="post_header">
+          <h2 id="post_title">Rewards This Week!</h2>
+            
+              <ul>
+                <li>  
+                  <a id="link" href="https://peakd.com/@stoken.quest/posts" target="_blank">Scores Published To The Blockchain</a></h2>
+                </li>
+              </ul>
+              <h3 id="rewardpool">loading...</h3>
+            <p>Voting increases the rewards for players!</p>
+            
+            
+        </div>
+
+        <div id= "post_bottom">
+          <button id="vote">Vote Now</button>
+          <img id ="boneless_guy"  src="images/boneless_guy.png"/>
+        </div>
+        
+      </div>
+    </div>
+  
+    <div class ="chatboxdiv">
+      <img src="images/lion on a marble pillar.gif" class = leftimage alt="art institute lion"/>
+      
+      <iframe id="chatbox" src="https://www3.cbox.ws/box/?boxid=3525954&boxtag=3OX7Jc" 
+                width="600" 
+                height="300" 
+                allowtransparency="yes" 
+                allow="autoplay" frameborder="0" marginheight="0" marginwidth="0" scrolling="auto" 
+                class="middleimage">
+              </iframe>
+
+      <img src="images/lion on a marble pillar.gif" class = rightimage alt="art institute lion"/>
+      
+    </div>
+
+    
+    <h2 id="discord">join the <a href="https://discord.gg/u95YjAryVA">Discord</a><img src="images/discord.png" alt="tiny discord logo"></h2>
+    
+    <script src='https://cdn.jsdelivr.net/npm/@widgetbot/crate@3' async defer>
+      new Crate({
+        color: "black",
+          defer: true,
+          glyph: ['https://gifdb.com/images/high/pepe-frog-meme-reading-text-nervous-sweat-3m7pw9rg9d3fyf5f.gif', '48px'], // Example URL and size
+          server: '414848672228966409', // QFS
+          channel: '1054139504312717473' // #general
+      })
+    </script>
+
+    <img src="images/Quest For Stoken Title Screen Small.gif" alt="Quest For Stoken Skatehive Hive Blockchain Play To Earn Video Game">
+    Gnar Studio 2023
+    <div class="smalltext">
+      <p>Brought to you by <a href="https://www.skatehive.app">Skatehive</a> and <a href="https://www.gnars.wtf">Gnars DAO</a></p>
+    </div>
+  
+    
+  </body>
+
+  
+</html>

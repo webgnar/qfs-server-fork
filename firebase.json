@@ -1,0 +1,9 @@
+{
+  "apiKey": "AIzaSyBTWnLu_Mez9vT_ijVMMQD5C5S6bC71er8",
+  "authDomain": "qfs-server.firebaseapp.com",
+  "databaseURL": "https://qfs-server-default-rtdb.firebaseio.com",
+  "projectId": "qfs-server",
+  "storageBucket": "qfs-server.appspot.com",
+  "messagingSenderId": "961533256781",
+  "appId": "1:961533256781:web:949181f22bb4dbda646804"
+}
