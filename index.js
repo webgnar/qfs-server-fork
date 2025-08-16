@@ -55,12 +55,27 @@ const whitelist = [
 // allow cors for only the whitelist or if the environment is development
 app.use(cors({
   origin: function (origin, callback) {
-    // console.log("origin: " + origin);
+    console.log("CORS check - origin:", origin);
 
-    if (process.env.NODE_ENV === 'development' || whitelist.includes(origin) || !origin) {
+    // Allow requests with no origin (like Postman, curl, direct browser access)
+    if (!origin) {
+      console.log("No origin - allowing request");
       return callback(null, true);
     }
 
+    // Allow development environment
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Development mode - allowing request");
+      return callback(null, true);
+    }
+
+    // Check whitelist
+    if (whitelist.includes(origin)) {
+      console.log("Origin in whitelist - allowing request");
+      return callback(null, true);
+    }
+
+    console.log("Origin not allowed:", origin);
     return callback(new Error('Not allowed by CORS'), false);
   }
 }));
