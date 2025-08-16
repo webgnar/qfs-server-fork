@@ -64,6 +64,15 @@ app.use((request, response, next) => {
 // stop logging the http requests
 app.use(logger('dev'));
 
+// Simple health check endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'QFS Server is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // /token/:username get request that returns a encoded jwt token with username, expires in 7 days
 // encoded by posting key and has to be decoded by the username's public active key
 app.get('/token/:username', async (req, res) => {

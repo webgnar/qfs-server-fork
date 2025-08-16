@@ -2,9 +2,9 @@
 builder = "nixpacks"
 
 [deploy]
-healthcheckPath = "/leaderboard"
-healthcheckTimeout = 300
-restartPolicyType = "never"
+healthcheckPath = "/"
+healthcheckTimeout = 60
+restartPolicyType = "on_failure"
 
 [env]
 NODE_ENV = "production"
