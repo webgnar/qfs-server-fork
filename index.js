@@ -135,11 +135,17 @@ app.get('/test', (req, res) => {
 
 // Debug endpoint to show all environment info
 app.get('/debug', (req, res) => {
+  const config = require('./firebase.json');
   res.status(200).json({
     port: port,
     env_port: process.env.PORT,
     node_env: process.env.NODE_ENV,
     firebase_initialized: !!db,
+    firebase_config: {
+      projectId: config.projectId,
+      databaseURL: config.databaseURL,
+      authDomain: config.authDomain
+    },
     timestamp: new Date().toISOString()
   });
 });
@@ -173,6 +179,40 @@ app.get('/times/mock', (req, res) => {
     { username: 'speedster2', time: 52, timestamp: Date.now() },
     { username: 'speedster3', time: 58, timestamp: Date.now() }
   ]);
+});
+
+// Firebase connection test
+app.get('/firebase/test', async (req, res) => {
+  try {
+    console.log('🔥 Testing Firebase connection...');
+    
+    if (!db) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    // Try to connect to a simple path with timeout
+    const testRef = ref(db, '.info/connected');
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Firebase connection timeout')), 5000)
+    );
+    
+    console.log('🔥 Attempting to read .info/connected...');
+    const snapshot = await Promise.race([get(testRef), timeoutPromise]);
+    
+    console.log('🔥 Firebase connection test result:', snapshot.val());
+    res.json({ 
+      firebase_connected: snapshot.val(),
+      database_url: 'qfs-server-default-rtdb.firebaseio.com',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('🔥 Firebase test error:', error.message);
+    res.status(500).json({ 
+      error: 'Firebase connection failed', 
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // /token/:username get request that returns a encoded jwt token with username, expires in 7 days
