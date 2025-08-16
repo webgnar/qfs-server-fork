@@ -107,6 +107,21 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
 
+// Very simple test endpoint
+app.get('/test', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// Debug endpoint to show all environment info
+app.get('/debug', (req, res) => {
+  res.status(200).json({
+    port: port,
+    env_port: process.env.PORT,
+    node_env: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // /token/:username get request that returns a encoded jwt token with username, expires in 7 days
 // encoded by posting key and has to be decoded by the username's public active key
 app.get('/token/:username', async (req, res) => {
@@ -449,8 +464,8 @@ app.post('/sql', async (req, res, next) => {
   next();
 }, getQuery);
 
-// if port is not set then use 3000
-const port = process.env.PORT || 3000;
+// Railway sets PORT automatically, but fallback to common ports
+const port = process.env.PORT || process.env.HTTP_PORT || 3000;
 
 // Add process error handling
 process.on('uncaughtException', (error) => {
@@ -466,6 +481,9 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('Starting server...');
 console.log(`Node.js version: ${process.version}`);
 console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`PORT environment variable: ${process.env.PORT}`);
+console.log(`Resolved port: ${port}`);
+console.log(`Available environment variables:`, Object.keys(process.env).filter(key => key.includes('PORT')));
 
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`✅ Server started successfully on port ${port}`);

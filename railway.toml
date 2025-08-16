@@ -3,6 +3,8 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "node index.js"
+healthcheckPath = "/test"
+healthcheckTimeout = 30
 
 [env]
 NODE_ENV = "production"
