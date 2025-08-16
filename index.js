@@ -158,6 +158,23 @@ app.get('/status', (req, res) => {
   });
 });
 
+// Mock endpoints for testing while Firebase is being fixed
+app.get('/leaderboard/mock', (req, res) => {
+  res.json([
+    { username: 'player1', highscore: 1000, timestamp: Date.now() },
+    { username: 'player2', highscore: 850, timestamp: Date.now() },
+    { username: 'player3', highscore: 750, timestamp: Date.now() }
+  ]);
+});
+
+app.get('/times/mock', (req, res) => {
+  res.json([
+    { username: 'speedster1', time: 45, timestamp: Date.now() },
+    { username: 'speedster2', time: 52, timestamp: Date.now() },
+    { username: 'speedster3', time: 58, timestamp: Date.now() }
+  ]);
+});
+
 // /token/:username get request that returns a encoded jwt token with username, expires in 7 days
 // encoded by posting key and has to be decoded by the username's public active key
 app.get('/token/:username', async (req, res) => {
