@@ -1,9 +1,10 @@
 [build]
-builder = "DOCKERFILE"
+builder = "nixpacks"
 
 [deploy]
-healthcheckPath = "/"
-healthcheckTimeout = 60
+restartPolicyType = "never"
 
 [env]
 NODE_ENV = "production"
+NIXPACKS_BUILD_CMD = "npm ci"
+NIXPACKS_START_CMD = "node index.js"

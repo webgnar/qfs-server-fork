@@ -8,12 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy application code
 COPY . .
 
-# Expose port 8080 (Railway's expected port)
+# Expose port (Railway will map this correctly)
 EXPOSE 8080
 
 # Start the application
