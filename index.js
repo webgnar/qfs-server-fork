@@ -307,20 +307,28 @@ app.get('/token/external/:username', async (req, res) => {
 
 // /verify post request that decodes the token and returns the user
 app.post('/verify', async (req, res) => {
+  console.log('🔐 Verify request received');
+  
   // get token from authorization header
   const auth = req.headers.authorization;
 
   if (!auth) {
+    console.log('❌ No authorization header');
     return res.status(400).send('Bad request');
   }
+
+  console.log('🔐 Authorization header received:', auth.substring(0, 20) + '...');
 
   // slice the "Bearer " part from the token
   const token = auth.slice(7);
 
   // if the token doesn't exist then return 400
   if (!token) {
+    console.log('❌ No token after slicing Bearer');
     return res.status(400).send('Bad request');
   }
+
+  console.log('🔐 Token extracted, length:', token.length);
 
   // decode the token
   try {
@@ -328,12 +336,15 @@ app.post('/verify', async (req, res) => {
 
     // if the token is invalid then return 401
     if (!decoded) {
+      console.log('❌ Token decoded but empty');
       return res.status(401).send('Unauthorized');
     }
 
+    console.log('✅ Token verified successfully for user:', decoded.username);
     // send the decoded token
     res.status(200).send(decoded);
   } catch (err) {
+    console.error('❌ Token verification failed:', err.message);
     // if the token is invalid then return 401
     res.status(401).send('Unauthorized');
   }
