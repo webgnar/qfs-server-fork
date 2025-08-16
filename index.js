@@ -368,9 +368,16 @@ app.get('/leaderboard', async (req, res) => {
       return res.status(500).json({ error: 'Database not available' });
     }
 
-    // get the data from the database
+    // get the data from the database with timeout
+    console.log('📊 Fetching from Firebase users table...');
     const dbRef = ref(db, 'users');
-    const dbSnap = await get(dbRef);
+    
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Firebase timeout')), 10000)
+    );
+    
+    const dbSnap = await Promise.race([get(dbRef), timeoutPromise]);
 
     // if the data doesn't exist then return blank
     if (!dbSnap.exists()) {
@@ -399,9 +406,16 @@ app.get('/times', async (req, res) => {
       return res.status(500).json({ error: 'Database not available' });
     }
 
-    // get the data from the database
+    // get the data from the database with timeout
+    console.log('⏱️ Fetching from Firebase times table...');
     const dbRef = ref(db, 'times');
-    const dbSnap = await get(dbRef);
+    
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Firebase timeout')), 10000)
+    );
+    
+    const dbSnap = await Promise.race([get(dbRef), timeoutPromise]);
 
     // if the data doesn't exist then return blank
     if (!dbSnap.exists()) {
