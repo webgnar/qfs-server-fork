@@ -82,6 +82,12 @@ app.use((request, response, next) => {
 // stop logging the http requests
 app.use(logger('dev'));
 
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`📥 Incoming request: ${req.method} ${req.url} from ${req.ip}`);
+  next();
+});
+
 // Simple health check endpoint
 app.get('/', (req, res) => {
   try {
