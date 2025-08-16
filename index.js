@@ -29,9 +29,8 @@ const whitelist = [
   'https://www.stoken.quest',
   'http://localhost:3000',
   'http://localhost:3002',  // Your Next.js frontend
-  // Add your production domains when ready
-  // 'https://your-frontend.vercel.app',
-  // 'https://your-app.netlify.app',
+  'https://qfs-frontend.vercel.app',  // Production frontend
+  // Add additional domains as needed
   // 'https://your-custom-domain.com'
 ];
 
