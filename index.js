@@ -139,6 +139,21 @@ app.get('/debug', (req, res) => {
     port: port,
     env_port: process.env.PORT,
     node_env: process.env.NODE_ENV,
+    firebase_initialized: !!db,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Simple test routes that don't require database
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API test endpoint working', timestamp: new Date().toISOString() });
+});
+
+app.get('/status', (req, res) => {
+  res.json({ 
+    status: 'online',
+    server: 'QFS Backend',
+    version: '1.0.0',
     timestamp: new Date().toISOString()
   });
 });
@@ -345,37 +360,63 @@ app.post('/pushscore', async (req, res) => {
 
 // /leaderboard get request that returns the top 15 data from the db sorted by highscore in descending order
 app.get('/leaderboard', async (req, res) => {
+  try {
+    console.log('📊 Leaderboard request received');
+    
+    if (!db) {
+      console.error('❌ Database not initialized');
+      return res.status(500).json({ error: 'Database not available' });
+    }
 
-  // get the data from the database
-  const dbRef = ref(db, 'users');
-  const dbSnap = await get(dbRef);
+    // get the data from the database
+    const dbRef = ref(db, 'users');
+    const dbSnap = await get(dbRef);
 
-  // if the data doesn't exist then return blank
-  if (!dbSnap.exists()) {
-    return res.status(200).send([]);
-  } else {
-    // else return the data
-    const dataRaw = dbSnap.val();
-    const data = Object.values(dataRaw).sort((a, b) => b.highscore - a.highscore).slice(0, 15);
-    res.status(200).send(data);
+    // if the data doesn't exist then return blank
+    if (!dbSnap.exists()) {
+      console.log('📊 No leaderboard data found');
+      return res.status(200).send([]);
+    } else {
+      // else return the data
+      const dataRaw = dbSnap.val();
+      const data = Object.values(dataRaw).sort((a, b) => b.highscore - a.highscore).slice(0, 15);
+      console.log(`📊 Returning ${data.length} leaderboard entries`);
+      res.status(200).send(data);
+    }
+  } catch (error) {
+    console.error('❌ Leaderboard error:', error);
+    res.status(500).json({ error: 'Failed to fetch leaderboard', details: error.message });
   }
 });
 
 // /times get request that returns the top 15 data from the db sorted by time in ascending order
 app.get('/times', async (req, res) => {
+  try {
+    console.log('⏱️ Times request received');
+    
+    if (!db) {
+      console.error('❌ Database not initialized');
+      return res.status(500).json({ error: 'Database not available' });
+    }
 
-  // get the data from the database
-  const dbRef = ref(db, 'times');
-  const dbSnap = await get(dbRef);
+    // get the data from the database
+    const dbRef = ref(db, 'times');
+    const dbSnap = await get(dbRef);
 
-  // if the data doesn't exist then return blank
-  if (!dbSnap.exists()) {
-    return res.status(200).send([]);
-  } else {
-    // else return the data
-    const dataRaw = dbSnap.val();
-    const data = Object.values(dataRaw).sort((a, b) => a.time - b.time).slice(0, 15);
-    res.status(200).send(data);
+    // if the data doesn't exist then return blank
+    if (!dbSnap.exists()) {
+      console.log('⏱️ No times data found');
+      return res.status(200).send([]);
+    } else {
+      // else return the data
+      const dataRaw = dbSnap.val();
+      const data = Object.values(dataRaw).sort((a, b) => a.time - b.time).slice(0, 15);
+      console.log(`⏱️ Returning ${data.length} time entries`);
+      res.status(200).send(data);
+    }
+  } catch (error) {
+    console.error('❌ Times error:', error);
+    res.status(500).json({ error: 'Failed to fetch times', details: error.message });
   }
 });
 
