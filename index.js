@@ -270,8 +270,13 @@ app.get('/token/:username', async (req, res) => {
     const encoded = dhive.Memo.encode(process.env.POSTING_KEY, publicKey, '#' + token);
 
     console.log(`✅ Token generated successfully for ${username}`);
-    // send the encoded token
-    res.status(200).send(encoded);
+    // send the encoded token as JSON
+    res.status(200).json({
+      success: true,
+      encoded_message: encoded,
+      username: username,
+      message: "Please sign this message with your Hive account"
+    });
   } catch (error) {
     console.error(`❌ Token generation error for ${username}:`, error);
     res.status(500).json({ error: 'Token generation failed', details: error.message });
