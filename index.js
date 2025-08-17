@@ -477,30 +477,57 @@ app.get('/leaderboard', async (req, res) => {
     // get the data from the database with timeout
     console.log('📊 Fetching from Firebase users table...');
     
-    // Add timeout to prevent hanging
+    // Add shorter timeout to prevent stack overflow
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Firebase timeout')), 10000)
+      setTimeout(() => reject(new Error('Firebase timeout')), 5000)
     );
     
-    const dbSnap = await Promise.race([
-      db.ref('users').once('value'),
-      timeoutPromise
-    ]);
+    let dbSnap;
+    try {
+      dbSnap = await Promise.race([
+        db.ref('users').once('value'),
+        timeoutPromise
+      ]);
+    } catch (firebaseError) {
+      console.error('🚨 Firebase error in leaderboard:', firebaseError.message);
+      // Return empty array on Firebase error to prevent crash
+      return res.status(200).send([]);
+    }
 
     // if the data doesn't exist then return blank
     if (!dbSnap.exists()) {
       console.log('📊 No leaderboard data found');
       return res.status(200).send([]);
     } else {
-      // else return the data
+      // else return the data with additional safety checks
       const dataRaw = dbSnap.val();
-      const data = Object.values(dataRaw).sort((a, b) => b.highscore - a.highscore).slice(0, 15);
+      
+      // Safety check for data structure
+      if (!dataRaw || typeof dataRaw !== 'object') {
+        console.log('📊 Invalid leaderboard data structure, returning empty');
+        return res.status(200).send([]);
+      }
+      
+      // Validate and filter data
+      const validEntries = [];
+      for (const [key, value] of Object.entries(dataRaw)) {
+        if (value && typeof value === 'object' && typeof value.highscore === 'number' && value.username) {
+          validEntries.push({
+            username: value.username,
+            highscore: value.highscore,
+            timestamp: value.timestamp || Date.now()
+          });
+        }
+      }
+      
+      const data = validEntries.sort((a, b) => b.highscore - a.highscore).slice(0, 15);
       console.log(`📊 Returning ${data.length} leaderboard entries`);
       res.status(200).send(data);
     }
   } catch (error) {
     console.error('❌ Leaderboard error:', error);
-    res.status(500).json({ error: 'Failed to fetch leaderboard', details: error.message });
+    // Always return valid response to prevent frontend errors
+    res.status(200).json([]);
   }
 });
 
@@ -517,30 +544,57 @@ app.get('/times', async (req, res) => {
     // get the data from the database with timeout
     console.log('⏱️ Fetching from Firebase times table...');
     
-    // Add timeout to prevent hanging
+    // Add shorter timeout to prevent stack overflow
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Firebase timeout')), 10000)
+      setTimeout(() => reject(new Error('Firebase timeout')), 5000)
     );
     
-    const dbSnap = await Promise.race([
-      db.ref('times').once('value'),
-      timeoutPromise
-    ]);
+    let dbSnap;
+    try {
+      dbSnap = await Promise.race([
+        db.ref('times').once('value'),
+        timeoutPromise
+      ]);
+    } catch (firebaseError) {
+      console.error('🚨 Firebase error in times:', firebaseError.message);
+      // Return empty array on Firebase error to prevent crash
+      return res.status(200).send([]);
+    }
 
     // if the data doesn't exist then return blank
     if (!dbSnap.exists()) {
       console.log('⏱️ No times data found');
       return res.status(200).send([]);
     } else {
-      // else return the data
+      // else return the data with additional safety checks
       const dataRaw = dbSnap.val();
-      const data = Object.values(dataRaw).sort((a, b) => a.time - b.time).slice(0, 15);
+      
+      // Safety check for data structure
+      if (!dataRaw || typeof dataRaw !== 'object') {
+        console.log('⏱️ Invalid times data structure, returning empty');
+        return res.status(200).send([]);
+      }
+      
+      // Validate and filter data
+      const validEntries = [];
+      for (const [key, value] of Object.entries(dataRaw)) {
+        if (value && typeof value === 'object' && typeof value.time === 'number' && value.username) {
+          validEntries.push({
+            username: value.username,
+            time: value.time,
+            timestamp: value.timestamp || Date.now()
+          });
+        }
+      }
+      
+      const data = validEntries.sort((a, b) => a.time - b.time).slice(0, 15);
       console.log(`⏱️ Returning ${data.length} time entries`);
       res.status(200).send(data);
     }
   } catch (error) {
     console.error('❌ Times error:', error);
-    res.status(500).json({ error: 'Failed to fetch times', details: error.message });
+    // Always return valid response to prevent frontend errors
+    res.status(200).json([]);
   }
 });
 
