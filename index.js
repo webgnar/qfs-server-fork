@@ -422,45 +422,17 @@ app.post('/pushscore', async (req, res) => {
   let usernameOld = username;
   username = username.replace(/[.,#$\[\]\/]/g, '');
 
-  // get the user from the database
-  const userRef = ref(db, 'users/' + username);
-  const timeRef = ref(db, 'times/' + username);
-  const userSnap = await get(userRef);
-  const timeSnap = await get(timeRef);
-
-  // if the user exists then update the highscore and time
-  if (highscore > 0) {
-    if (userSnap.exists()) {
-      const user = userSnap.val();
-      user.highscore = highscore ? parseFloat(highscore) : user.highscore;
-      user.timestamp = parseInt(timestamp);
-    
-      await set(userRef, user);
-    } else {
-      // else push the data to the database
-      await set(userRef, data);
-    }
-  }
-
-  if (time > 0) {
-    if (timeSnap.exists()) {
-      const user = timeSnap.val();
-      user.time = time ? time : user.time;
-      user.timestamp = timestamp;
+  // TEMPORARILY DISABLE Firebase operations due to corruption
+  console.log('🚨 Firebase pushscore temporarily disabled due to corruption');
+  console.log(`📊 Mock save: ${username} - score: ${highscore}, time: ${time}`);
   
-      await set(timeRef, user);
-    } else {
-      // else push the data to the database
-      await set(timeRef, data_time);
-    }
-  }
-
-  // send 200 with the data
+  // Return success response without Firebase operations
   res.status(200).send({
     username: usernameOld,
     highscore: highscore ? highscore : 0,
     time: time ? time : 0,
-    timestamp
+    timestamp,
+    note: "Score temporarily not saved due to database maintenance"
   });
 });
 
@@ -474,14 +446,6 @@ app.get('/leaderboard', async (req, res) => {
       return res.status(500).json({ error: 'Database not available' });
     }
 
-    // get the data from the database with timeout
-    console.log('📊 Fetching from Firebase users table...');
-    
-    // Add shorter timeout to prevent stack overflow
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Firebase timeout')), 5000)
-    );
-    
     // TEMPORARILY DISABLE Firebase read due to corruption
     console.log('🚨 Firebase users table temporarily disabled due to corruption');
     return res.status(200).json([
@@ -536,14 +500,6 @@ app.get('/times', async (req, res) => {
       return res.status(500).json({ error: 'Database not available' });
     }
 
-    // get the data from the database with timeout
-    console.log('⏱️ Fetching from Firebase times table...');
-    
-    // Add shorter timeout to prevent stack overflow
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Firebase timeout')), 5000)
-    );
-    
     // TEMPORARILY DISABLE Firebase read due to corruption
     console.log('🚨 Firebase times table temporarily disabled due to corruption');
     return res.status(200).json([
