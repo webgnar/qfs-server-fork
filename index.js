@@ -23,11 +23,38 @@ const fs = require('fs');
 // sql endpoint
 const getQuery = require('./hivesql/main');
 
-// TEMPORARILY DISABLE Firebase initialization due to severe database corruption
-let db = null;
-console.log('🚨 Firebase initialization DISABLED due to database corruption');
-console.log('🔧 Server running in Firebase-free mode for testing');
-console.log('⚠️  All data operations will return mock data');
+// Initialize Firebase with error handling
+let db;
+try {
+  console.log('Initializing Firebase...');
+  
+  let app;
+  
+  // Check if we have service account credentials
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    console.log('Using Firebase service account credentials');
+    const admin = require('firebase-admin');
+    
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    
+    app = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: 'https://qfs-server-default-rtdb.firebaseio.com'
+    });
+    
+    db = admin.database();
+    console.log('Firebase Admin SDK initialized successfully');
+  } else {
+    console.log('Using client Firebase configuration');
+    const config = require('./firebase.json');
+    app = initializeApp(config);
+    db = getDatabase(app);
+    console.log('Firebase client SDK initialized successfully');
+  }
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Don't crash the server, just log the error
+}
 
 const client = new dhive.Client(['https://api.hive.blog', 'https://api.hivekings.com', 'https://anyx.io', 'https://api.openhive.network']);
 
@@ -395,17 +422,42 @@ app.post('/pushscore', async (req, res) => {
   let usernameOld = username;
   username = username.replace(/[.,#$\[\]\/]/g, '');
 
-  // TEMPORARILY DISABLE Firebase operations due to corruption
-  console.log('🚨 Firebase pushscore temporarily disabled due to corruption');
-  console.log(`📊 Mock save: ${username} - score: ${highscore}, time: ${time}`);
+  // Save to Firebase
+  const userRef = ref(db, 'users/' + username);
+  const timeRef = ref(db, 'times/' + username);
   
-  // Return success response without Firebase operations
+  const userSnap = await get(userRef);
+  const timeSnap = await get(timeRef);
+
+  // Update or create highscore
+  if (highscore > 0) {
+    if (userSnap.exists()) {
+      const user = userSnap.val();
+      user.highscore = highscore ? parseFloat(highscore) : user.highscore;
+      user.timestamp = parseInt(timestamp);
+      await set(userRef, user);
+    } else {
+      await set(userRef, data);
+    }
+  }
+
+  // Update or create time
+  if (time > 0) {
+    if (timeSnap.exists()) {
+      const user = timeSnap.val();
+      user.time = time ? time : user.time;
+      user.timestamp = timestamp;
+      await set(timeRef, user);
+    } else {
+      await set(timeRef, data_time);
+    }
+  }
+
   res.status(200).send({
     username: usernameOld,
     highscore: highscore ? highscore : 0,
     time: time ? time : 0,
-    timestamp,
-    note: "Score temporarily not saved due to database maintenance"
+    timestamp
   });
 });
 
@@ -419,11 +471,14 @@ app.get('/leaderboard', async (req, res) => {
       return res.status(500).json({ error: 'Database not available' });
     }
 
-    // TEMPORARILY DISABLE Firebase read due to corruption
-    console.log('🚨 Firebase users table temporarily disabled due to corruption');
-    return res.status(200).json([
-      { username: "testuser", highscore: 1000 },
-      { username: "system", highscore: 500 }
+    // Get data from Firebase with timeout protection
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Firebase timeout')), 10000)
+    );
+    
+    const dbSnap = await Promise.race([
+      db.ref('users').once('value'),
+      timeoutPromise
     ]);
 
     // if the data doesn't exist then return blank
@@ -473,11 +528,14 @@ app.get('/times', async (req, res) => {
       return res.status(500).json({ error: 'Database not available' });
     }
 
-    // TEMPORARILY DISABLE Firebase read due to corruption
-    console.log('🚨 Firebase times table temporarily disabled due to corruption');
-    return res.status(200).json([
-      { username: "testuser", time: 120 },
-      { username: "system", time: 180 }
+    // Get data from Firebase with timeout protection  
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Firebase timeout')), 10000)
+    );
+    
+    const dbSnap = await Promise.race([
+      db.ref('times').once('value'),
+      timeoutPromise
     ]);
 
     // if the data doesn't exist then return blank
