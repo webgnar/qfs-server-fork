@@ -23,38 +23,11 @@ const fs = require('fs');
 // sql endpoint
 const getQuery = require('./hivesql/main');
 
-// Initialize Firebase with error handling
-let db;
-try {
-  console.log('Initializing Firebase...');
-  
-  let app;
-  
-  // Check if we have service account credentials
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    console.log('Using Firebase service account credentials');
-    const admin = require('firebase-admin');
-    
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    
-    app = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: 'https://qfs-server-default-rtdb.firebaseio.com'
-    });
-    
-    db = admin.database();
-    console.log('Firebase Admin SDK initialized successfully');
-  } else {
-    console.log('Using client Firebase configuration');
-    const config = require('./firebase.json');
-    app = initializeApp(config);
-    db = getDatabase(app);
-    console.log('Firebase client SDK initialized successfully');
-  }
-} catch (error) {
-  console.error('Firebase initialization error:', error);
-  // Don't crash the server, just log the error
-}
+// TEMPORARILY DISABLE Firebase initialization due to severe database corruption
+let db = null;
+console.log('🚨 Firebase initialization DISABLED due to database corruption');
+console.log('🔧 Server running in Firebase-free mode for testing');
+console.log('⚠️  All data operations will return mock data');
 
 const client = new dhive.Client(['https://api.hive.blog', 'https://api.hivekings.com', 'https://anyx.io', 'https://api.openhive.network']);
 
@@ -544,38 +517,30 @@ app.get('/times', async (req, res) => {
   }
 });
 
-// /getscore get request that returns all the data from the db sorted by highscore in descending order
+// /getscore get request - TEMPORARILY DISABLED due to Firebase corruption
 app.get('/getscore', async (req, res) => {
-  // get the data from the database
-  const dbRef = ref(db, 'users'); 
-  const dbSnap = await get(dbRef);
-
-  // if the data doesn't exist then return blank
-  if (!dbSnap.exists()) {
-    return res.status(200).send([]);
-  } else {
-    // else return the data
-    const dataRaw = dbSnap.val();
-    const data = Object.values(dataRaw).sort((a, b) => b.highscore - a.highscore);
-    res.status(200).send(data);
-  }
+  console.log('🚨 getscore endpoint temporarily disabled due to Firebase corruption');
+  
+  // Return mock data
+  const mockData = [
+    { username: "testuser", highscore: 1000, timestamp: Date.now() },
+    { username: "system", highscore: 500, timestamp: Date.now() }
+  ];
+  
+  res.status(200).send(mockData);
 });
 
-// /gettime get request that returns all the data from the db sorted by time in ascending order
+// /gettime get request - TEMPORARILY DISABLED due to Firebase corruption
 app.get('/gettime', async (req, res) => {
-  // get the data from the database
-  const dbRef = ref(db, 'times');
-  const dbSnap = await get(dbRef);
-
-  // if the data doesn't exist then return blank
-  if (!dbSnap.exists()) {
-    return res.status(200).send([]);
-  } else {
-    // else return the data
-    const dataRaw = dbSnap.val();
-    const data = Object.values(dataRaw).sort((a, b) => a.time - b.time);
-    res.status(200).send(data);
-  }
+  console.log('🚨 gettime endpoint temporarily disabled due to Firebase corruption');
+  
+  // Return mock data
+  const mockData = [
+    { username: "testuser", time: 120, timestamp: Date.now() },
+    { username: "system", time: 180, timestamp: Date.now() }
+  ];
+  
+  res.status(200).send(mockData);
 });
 
 // /getuser/:username get request that returns the data of the user with the username passed in the url
@@ -586,58 +551,32 @@ app.get('/getuser/:username', async (req, res) => {
   let usernameOld = username;
   username = username.replace(/[.,#$\[\]\/]/g, '');
 
-  // get the data from the database
-  const dbRef = ref(db, 'users/' + username);
-  const dbSnap = await get(dbRef);
-
-  const dbRef_time = ref(db, 'times/' + username);
-  const dbSnap_time = await get(dbRef_time);
-
-  let data = { username: usernameOld, highscore: 0, time: 0 };
-
-  // if data exists then return the data
-  if (dbSnap.exists()) {
-    data = dbSnap.val();
-  }
-
-  if (dbSnap_time.exists()) {
-    data.time = dbSnap_time.val().time;
-  } else {
-    data.time = 0;
-  }
+  // TEMPORARILY DISABLE Firebase operations due to corruption
+  console.log(`🚨 getuser endpoint temporarily disabled for ${username}`);
+  
+  // Return mock data for testing
+  let data = { 
+    username: usernameOld, 
+    highscore: username === 'testuser' ? 1000 : 0, 
+    time: username === 'testuser' ? 120 : 0,
+    note: "Mock data - Firebase disabled due to corruption"
+  };
 
   res.status(200).send(data);
 });
 
 // /rewardpool get request that returns the current reward pool post link is in the db
 app.get('/rewardpool', async (req, res) => {
-  // get the data from the database
-  const dbRef = ref(db, 'link');
-  const dbSnap = await get(dbRef);
+  // TEMPORARILY DISABLE Firebase operations due to corruption
+  console.log('🚨 rewardpool endpoint temporarily disabled - fetching latest post directly');
   
-  // if link doesn't exist then return the last post by the account
-  if (!dbSnap.exists()) {
+  // Get latest post directly from Hive instead of Firebase
+  try {
     const posts = await client.hivemind.getAccountPosts({ account: process.env.ACCOUNT, limit: 1, sort: 'posts' })
     return res.status(200).send(posts[0]);
-  }
-
-  // else return the post with the link
-  const link = dbSnap.val();
-  try {
-    const post = await client.database.call('get_content', [process.env.ACCOUNT, link.link]);
-    res.status(200).send({ post, link: link.link, week: link.week });
-  } catch (err) {
-    res.status(200).send({
-      post: {
-        author: process.env.ACCOUNT,
-        permlink: link.link,
-        title: 'Post not found',
-        pending_payout_value: '0.000 HBD',
-        active_votes: [],
-      },
-      link: link.link,
-      week: link.week
-    });
+  } catch (error) {
+    console.error('Error fetching latest post:', error);
+    return res.status(500).send({ error: 'Could not fetch reward pool data' });
   }
 });
 
